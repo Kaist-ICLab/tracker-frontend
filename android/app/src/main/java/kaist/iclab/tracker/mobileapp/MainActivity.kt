@@ -1,4 +1,4 @@
-package com.anonymous.trackerapp
+package kaist.iclab.tracker.mobileapp
 
 import android.os.Build
 import android.os.Bundle
@@ -32,7 +32,7 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate {
     return ReactActivityDelegateWrapper(
           this,
-          BuildConfig.IS_NEW_ARCHITECTURE_ENABLED,
+        BuildConfig.IS_NEW_ARCHITECTURE_ENABLED,
           object : DefaultReactActivityDelegate(
               this,
               mainComponentName,

@@ -1,4 +1,4 @@
-package com.anonymous.trackerapp
+package kaist.iclab.tracker.mobileapp
 
 import android.app.Application
 import android.content.res.Configuration
