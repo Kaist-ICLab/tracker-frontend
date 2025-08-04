@@ -1,10 +1,31 @@
 package expo.modules.androidtrackerlib
 
+import androidx.activity.ComponentActivity
+import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import java.net.URL
+
+// Import from Android Tracker AAR File
+import kaist.iclab.tracker.permission.Permission
+import kaist.iclab.tracker.permission.PermissionManagerImpl
 
 class AndroidTrackerLibModule : Module() {
+  private val context
+    get() = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+
+  companion object {
+    private var permissionManager: PermissionManagerImpl? = null
+
+    fun initPermissionManager(activity: ComponentActivity) {
+      permissionManager = PermissionManagerImpl(activity.applicationContext)
+      permissionManager!!.bind(activity)
+    }
+
+    fun getPermissionManager(): PermissionManagerImpl {
+      return permissionManager ?: throw IllegalStateException("PermissionManager not initialized")
+    }
+  }
+
   // Each module class must implement the definition function. The definition consists of components
   // that describes the module's functionality and behavior.
   // See https://docs.expo.dev/modules/module-api for more details about available components.
@@ -14,37 +35,17 @@ class AndroidTrackerLibModule : Module() {
     // The module will be accessible from `requireNativeModule('AndroidTrackerLib')` in JavaScript.
     Name("AndroidTrackerLib")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
-
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
-    }
-
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { value: String ->
-      // Send an event to JavaScript.
-      sendEvent("onChange", mapOf(
-        "value" to value
-      ))
-    }
-
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(AndroidTrackerLibView::class) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { view: AndroidTrackerLibView, url: URL ->
-        view.webView.loadUrl(url.toString())
+    // Permission Functions
+    Function("getUserPermissions") {
+      val permissionManager = getPermissionManager()
+      val permissionIds = Permission.supportedPermissions.flatMap { it.ids.toList() }.toTypedArray()
+      permissionManager.getPermissionFlow(permissionIds).value.any { (permission) ->
+        permissionIds.contains(permission)
       }
-      // Defines an event that the view can send to JavaScript.
-      Events("onLoad")
+    }
+
+    Function("requestPermission") { permissionKey: String ->
+      getPermissionManager().request(arrayOf(permissionKey))
     }
   }
 }
