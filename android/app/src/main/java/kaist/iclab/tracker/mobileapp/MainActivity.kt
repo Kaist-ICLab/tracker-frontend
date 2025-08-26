@@ -9,6 +9,7 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnable
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
+import expo.modules.androidtrackerlib.AndroidTrackerLibModule
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,6 +18,13 @@ class MainActivity : ReactActivity() {
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null)
+
+    // Initialize native permission manager for AndroidTrackerLibModule
+    try {
+      AndroidTrackerLibModule.initPermissionManager(this)
+    } catch (e: Exception) {
+      // No-op: avoid crashing if module isn't available in certain builds
+    }
   }
 
   /**

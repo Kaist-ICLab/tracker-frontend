@@ -9,10 +9,13 @@ type AndroidTrackerLibModuleEvents = {
 // See AndroidTrackerLibModule.ts file for implementation on native platforms.
 // Most of the functions will not be implemented for the web version
 class AndroidTrackerLibModule extends NativeModule<AndroidTrackerLibModuleEvents> {
-  getUserPermissions() {
-    return;
+  getSupportedPermissions() {
+    return [];
   }
   requestPermission() {
+    return;
+  }
+  requestPermissionGroup() {
     return;
   }
 };

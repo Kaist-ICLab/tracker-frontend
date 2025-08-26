@@ -8,6 +8,7 @@ import expo.modules.kotlin.modules.ModuleDefinition
 // Import from Android Tracker AAR File
 import kaist.iclab.tracker.permission.Permission
 import kaist.iclab.tracker.permission.PermissionManagerImpl
+import kaist.iclab.tracker.permission.PermissionState
 
 class AndroidTrackerLibModule : Module() {
   private val context
@@ -36,16 +37,35 @@ class AndroidTrackerLibModule : Module() {
     Name("AndroidTrackerLib")
 
     // Permission Functions
-    Function("getUserPermissions") {
-      val permissionManager = getPermissionManager()
-      val permissionIds = Permission.supportedPermissions.flatMap { it.ids.toList() }.toTypedArray()
-      permissionManager.getPermissionFlow(permissionIds).value.any { (permission) ->
-        permissionIds.contains(permission)
+    // Returns a list of supported permission groups with their metadata and current combined state
+    Function("getSupportedPermissions") {
+      val groups = PermissionUtils.getSupportedPermissionGroups()
+
+      val result = groups.map { group ->
+        val ids = group.ids
+        val activity = appContext.currentActivity as? ComponentActivity
+        val combinedState = PermissionUtils.combineStates(ids.map { id -> PermissionUtils.getPermissionStateSync(context, activity, id) })
+        mapOf(
+          "groupKey" to group.name, // use human-readable name as stable key
+          "name" to group.name,
+          "description" to group.description,
+          "ids" to ids.toList(),
+          "state" to combinedState.name,
+        )
       }
+      result
+    }
+
+    // Requests a permission group by its groupKey (permission name)
+    Function("requestPermissionGroup") { groupKey: String ->
+      val group = Permission.supportedPermissions.firstOrNull { it.name == groupKey }
+        ?: throw IllegalArgumentException("Unknown permission group: $groupKey")
+      getPermissionManager().request(group.ids)
     }
 
     Function("requestPermission") { permissionKey: String ->
       getPermissionManager().request(arrayOf(permissionKey))
     }
   }
+
 }

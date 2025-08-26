@@ -1,31 +1,83 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Permission } from '@/types/settings';
+import AndroidTrackerLib from '../../../modules/android-tracker-lib';
+import { Linking } from 'react-native';
 
-const MOCK_PERMISSIONS: Permission[] = [
-  { id: 'perm1', key: 'location', icon: 'location', name: '위치', status: '허용됨' },
-  { id: 'perm2', key: 'activity', icon: 'walk', name: '신체활동', status: '거부됨' },
-  { id: 'perm3', key: 'notification', icon: 'notifications', name: '알림', status: '허용됨' },
-  { id: 'perm4', key: 'storage', icon: 'folder', name: '저장소', status: '허용됨' },
-  { id: 'perm5', key: 'bluetooth', icon: 'bluetooth', name: '블루투스', status: '거부됨' },
-];
+const iconForGroup = (groupKey: string): string => {
+  const key = groupKey.toLowerCase();
+  if (key.includes('notification')) return 'notifications';
+  if (key.includes('location') && key.includes('background')) return 'navigate';
+  if (key.includes('location')) return 'location';
+  if (key.includes('sensor') || key.includes('body')) return 'fitness';
+  if (key.includes('usage')) return 'time';
+  if (key.includes('accessibility')) return 'accessibility';
+  return 'settings';
+};
 
+const mapStateToKorean = (state: string): Permission['status'] => {
+  switch (state) {
+    case 'GRANTED':
+      return '허용됨';
+    case 'NOT_REQUESTED':
+      return '미설정';
+    case 'RATIONALE_REQUIRED':
+    case 'PERMANENTLY_DENIED':
+    default:
+      return '거부됨';
+  }
+};
 
 export const usePermissions = () => {
-  const [permissions, setPermissions] = useState(MOCK_PERMISSIONS);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
-  const requestPermission = async (permissionKey: string, enabled: boolean) => {
-    setPermissions(prevPermissions =>
-      prevPermissions.map(permission =>
-        permission.key === permissionKey
-          ? { ...permission, status: enabled ? '허용됨' : '거부됨' }
-          : permission
-      )
-    );
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError(undefined);
+      const groups = AndroidTrackerLib.getSupportedPermissions?.() ?? [];
+      const mapped: Permission[] = groups.map(g => ({
+        id: g.groupKey,
+        key: g.groupKey,
+        icon: iconForGroup(g.groupKey),
+        name: g.name,
+        status: mapStateToKorean(g.state),
+      }));
+
+      setPermissions(mapped);
+    } catch (e) {
+      setError('권한 정보를 불러오지 못했어요');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    load();
+  }, []);
+
+  const requestPermission = async (permissionKey: string, enabled: boolean) => {
+    try {
+      if (enabled) {
+        AndroidTrackerLib.requestPermissionGroup?.(permissionKey);
+      } else {
+        // For turning off permissions, redirect to app settings
+        await Linking.openSettings();
+      }
+      // Give the system a moment and then refresh
+      setTimeout(load, 1000);
+    } catch (e) {
+      // ignore and refresh
+      setTimeout(load, 1000);
+    }
+  };
 
   return {
     permissions,
+    loading,
+    error,
+    refresh: load,
     requestPermission,
   };
-}; 
+};
