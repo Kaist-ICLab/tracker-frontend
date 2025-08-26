@@ -28,7 +28,6 @@ export const SensorCenterScreen = () => {
   return (
     <ScrollView className="flex-1 bg-gray-100">
       <View className="p-4">
-        <Text className="text-[15px] font-bold text-blue-600 mt-[18px] mb-2">Core Sensors</Text>
         <FlatList
           data={coreSensors}
           keyExtractor={item => item.key}
