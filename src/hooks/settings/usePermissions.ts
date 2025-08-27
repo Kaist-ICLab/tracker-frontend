@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Permission } from '@/types/settings';
 import AndroidTrackerLib from '../../../modules/android-tracker-lib';
 import { Linking } from 'react-native';
+import { WAITING_TIME } from '@/constants/config';
 
 const iconForGroup = (groupKey: string): string => {
   const key = groupKey.toLowerCase();
@@ -32,7 +33,7 @@ export const usePermissions = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const load = async () => {
+  const loadPermissions = async () => {
     try {
       setLoading(true);
       setError(undefined);
@@ -54,22 +55,21 @@ export const usePermissions = () => {
   };
 
   useEffect(() => {
-    load();
+    loadPermissions();
   }, []);
 
   const requestPermission = async (permissionKey: string, enabled: boolean) => {
     try {
       if (enabled) {
+        // Request permission normally to the android native module
         AndroidTrackerLib.requestPermissionGroup?.(permissionKey);
       } else {
         // For turning off permissions, redirect to app settings
         await Linking.openSettings();
       }
-      // Give the system a moment and then refresh
-      setTimeout(load, 1000);
+      setTimeout(loadPermissions, WAITING_TIME);
     } catch (e) {
-      // ignore and refresh
-      setTimeout(load, 1000);
+      setTimeout(loadPermissions, WAITING_TIME);
     }
   };
 
@@ -77,7 +77,6 @@ export const usePermissions = () => {
     permissions,
     loading,
     error,
-    refresh: load,
     requestPermission,
   };
 };

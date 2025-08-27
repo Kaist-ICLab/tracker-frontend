@@ -3,7 +3,7 @@ import { View, Text, Switch, FlatList, ActivityIndicator, TouchableOpacity, Aler
 import { Ionicons } from '@expo/vector-icons';
 import { useSensors } from '@/hooks/settings/useSensors';
 import { Sensor } from '@/types/settings';
-import { LOADING_TEXT } from '@/constants/settings';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 export const SensorCenterScreen = () => {
   const {
@@ -55,7 +55,7 @@ export const SensorCenterScreen = () => {
       const allStatus = await verifyAllSensors();
       if (allStatus) {
         const activeSensors = allStatus.filter((s: any) => s.active).map((s: any) => s.key);
-        const message = activeSensors.length > 0 
+        const message = activeSensors.length > 0
           ? `활성화된 센서: ${activeSensors.join(', ')}`
           : '활성화된 센서가 없습니다.';
         Alert.alert('전체 센서 상태', message);
@@ -69,10 +69,7 @@ export const SensorCenterScreen = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-4 text-gray-600">{LOADING_TEXT}</Text>
-      </View>
+      <LoadingScreen />
     );
   }
 
@@ -151,7 +148,7 @@ export const SensorCenterScreen = () => {
         )}
         ItemSeparatorComponent={() => <View className="h-[1px] bg-gray-200" />}
         contentContainerStyle={{ backgroundColor: 'white', borderRadius: 16, margin: 16, overflow: 'hidden' }}
-        scrollEnabled={false}
+        scrollEnabled={true}
       />
     </View>
   );

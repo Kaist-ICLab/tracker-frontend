@@ -8,13 +8,13 @@ import expo.modules.kotlin.modules.ModuleDefinition
 // Import from Android Tracker AAR File
 import kaist.iclab.tracker.permission.Permission
 import kaist.iclab.tracker.permission.PermissionManagerImpl
-import kaist.iclab.tracker.permission.PermissionState
 
 class AndroidTrackerLibModule : Module() {
   private val context
     get() = appContext.reactContext ?: throw Exceptions.ReactContextLost()
 
   companion object {
+    // TODO: Look into tihs matter if needed
     private var permissionManager: PermissionManagerImpl? = null
 
     fun initPermissionManager(activity: ComponentActivity) {
@@ -23,7 +23,7 @@ class AndroidTrackerLibModule : Module() {
     }
 
     fun getPermissionManager(): PermissionManagerImpl {
-      return permissionManager ?: throw IllegalStateException("PermissionManager not initialized")
+      return permissionManager ?: throw IllegalStateException("PermissionManager is not initialized")
     }
   }
 
@@ -36,11 +36,9 @@ class AndroidTrackerLibModule : Module() {
     // The module will be accessible from `requireNativeModule('AndroidTrackerLib')` in JavaScript.
     Name("AndroidTrackerLib")
 
-    // Permission Functions
     // Returns a list of supported permission groups with their metadata and current combined state
     Function("getSupportedPermissions") {
       val groups = PermissionUtils.getSupportedPermissionGroups()
-
       val result = groups.map { group ->
         val ids = group.ids
         val activity = appContext.currentActivity as? ComponentActivity
@@ -67,7 +65,8 @@ class AndroidTrackerLibModule : Module() {
       getPermissionManager().request(arrayOf(permissionKey))
     }
 
-    // Sensor Management Functions
+    // Sensor Management Related Functions
+
     Function("getAvailableSensors") {
       SensorUtils.getAvailableSensors(context)
     }
