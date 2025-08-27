@@ -1,3 +1,5 @@
+export const LOADING_TEXT = '로딩중...';
+
 export const CATEGORIES = [
   {
     key: 'Account',

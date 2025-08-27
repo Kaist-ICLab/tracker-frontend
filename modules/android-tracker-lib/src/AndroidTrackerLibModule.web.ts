@@ -9,6 +9,7 @@ type AndroidTrackerLibModuleEvents = {
 // See AndroidTrackerLibModule.ts file for implementation on native platforms.
 // Most of the functions will not be implemented for the web version
 class AndroidTrackerLibModule extends NativeModule<AndroidTrackerLibModuleEvents> {
+  // Permission Management - Web stubs
   getSupportedPermissions() {
     return [];
   }
@@ -17,6 +18,26 @@ class AndroidTrackerLibModule extends NativeModule<AndroidTrackerLibModuleEvents
   }
   requestPermissionGroup() {
     return;
+  }
+  
+  // Sensor Management - Web stubs
+  getAvailableSensors() {
+    return [];
+  }
+  startSensor() {
+    return { success: false, message: 'Sensors not available on web' };
+  }
+  stopSensor() {
+    return { success: false, message: 'Sensors not available on web' };
+  }
+  getSensorStatus() {
+    return { active: false, name: 'Web', lastUpdate: 'Not available' };
+  }
+  getAllSensorStatus() {
+    return [];
+  }
+  checkSensorPermission() {
+    return { granted: false, permissions: [], grantedPermissions: [] };
   }
 };
 

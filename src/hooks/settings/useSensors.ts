@@ -1,95 +1,209 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sensor } from '@/types/settings';
+import AndroidTrackerLib from '../../../modules/android-tracker-lib';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const CORE_SENSORS: (Sensor & { isActive: boolean })[] = [
-  { key: 'accel', icon: 'speedometer', name: '가속도계', desc: '기본 움직임 감지', isActive: true },
-  { key: 'gyro', icon: 'git-compare', name: '자이로스코프', desc: '회전 감지', isActive: true },
-  { key: 'gps', icon: 'location', name: 'GPS', desc: '위치 추적', isActive: true },
-  { key: 'heart', icon: 'heart', name: '심박수', desc: '심박수 모니터링', isActive: true },
-  { key: 'temp', icon: 'thermometer', name: '온도계', desc: '체온 측정', isActive: true }
+export const CORE_SENSORS: Sensor[] = [
+  { key: 'accel', icon: 'speedometer', name: '가속도계', desc: '기본 움직임 감지' },
+  { key: 'gyro', icon: 'git-compare', name: '자이로스코프', desc: '회전 감지' },
+  { key: 'gps', icon: 'location', name: 'GPS', desc: '위치 추적' },
+  { key: 'heart', icon: 'heart', name: '심박수', desc: '심박수 모니터링' },
+  { key: 'temp', icon: 'thermometer', name: '온도계', desc: '체온 측정' }
 ];
 
-export const COMMUNITY_SENSORS: Sensor[] = [
-  { key: 'exercise', icon: 'barbell', name: '운동 강도 분석', desc: '운동 강도 측정' },
-  { key: 'water', icon: 'water', name: '수분 섭취 추적', desc: '수분 섭취량 모니터링' },
-  { key: 'mood', icon: 'happy', name: '기분 일기', desc: '감정 상태 기록' },
-  { key: 'allergy', icon: 'medical', name: '알레르기 모니터링', desc: '알레르기 반응 추적' },
-  { key: 'skin', icon: 'body', name: '피부 상태 체크', desc: '피부 건강 모니터링' },
-  { key: 'sleep', icon: 'moon', name: '수면 분석', desc: '수면 패턴 분석' },
-  { key: 'stress', icon: 'pulse', name: '스트레스 측정', desc: '스트레스 레벨 모니터링' },
-  { key: 'meal', icon: 'restaurant', name: '식사 기록', desc: '식사 패턴 추적' }
-];
+export const useSensors = () => {
+  const [coreSensors, setCoreSensors] = useState<(Sensor & { isActive: boolean; available: boolean; loading: boolean; status?: string })[]>([]);
+  const [loading, setLoading] = useState(true);
+  const SENSOR_STATES_KEY = 'sensor_states';
 
-export const INSTALLED_COMMUNITY_SENSORS = [
-  {key:'sleep', isActive: true},
-  {key:'stress', isActive: false},
-  {key:'meal', isActive: true},
-];
+  const saveSensorStates = async (sensors: (Sensor & { isActive: boolean; available: boolean; loading: boolean })[]) => {
+    try {
+      const states = sensors.reduce((acc, sensor) => {
+        acc[sensor.key] = sensor.isActive;
+        return acc;
+      }, {} as Record<string, boolean>);
+      await AsyncStorage.setItem(SENSOR_STATES_KEY, JSON.stringify(states));
+    } catch (error) {
+      console.error('Failed to save sensor states:', error);
+    }
+  };
 
-export const CORE_SENSORS_STATUS = [
-  {key:'accel', isActive: true},
-  {key:'gyro', isActive: true},
-  {key:'gps', isActive: true},
-  {key:'heart', isActive: true},
-  {key:'temp', isActive: true},
-];
+  const loadSensorStates = async (): Promise<Record<string, boolean>> => {
+    try {
+      const states = await AsyncStorage.getItem(SENSOR_STATES_KEY);
+      return states ? JSON.parse(states) : {};
+    } catch (error) {
+      console.error('Failed to load sensor states:', error);
+      return {};
+    }
+  };
 
-export const useSensors = () => {  
-  const [coreSensors, setCoreSensors] = useState(CORE_SENSORS);
-  const [communitySensors, setCommunitySensors] = useState(COMMUNITY_SENSORS);
-  const [installedCommunitySensors, setInstalledCommunitySensors] = useState(INSTALLED_COMMUNITY_SENSORS);
+  const loadSensors = async () => {
+    try {
+      setLoading(true);
+      const availableSensors = AndroidTrackerLib.getAvailableSensors?.() ?? [];
+      const savedStates = await loadSensorStates();
+      const sensorStatuses = AndroidTrackerLib.getAllSensorStatus?.() ?? [];
 
-  const loadCommunitySensors = async () => {
-    setCommunitySensors(COMMUNITY_SENSORS);
-  }
+      const sensorsWithState = CORE_SENSORS.map(sensor => {
+        const availableSensor = availableSensors.find(s => s.key === sensor.key);
+        const statusInfo = sensorStatuses.find(s => s.key === sensor.key);
+        return {
+          ...sensor,
+          isActive: savedStates[sensor.key] ?? false, // Use saved state or default to inactive
+          available: availableSensor?.available ?? false,
+          loading: false,
+          status: statusInfo?.status ?? 'STOPPED'
+        };
+      });
 
-  const installCommunitySensor = async (sensor: Sensor) => {
-    setInstalledCommunitySensors(prev => {
-      if (prev.some(s => s.key === sensor.key)) return prev;
-      return [...prev, { key: sensor.key, isActive: true }];
-    });
-  }
-
-  const uninstallCommunitySensor = async (sensor: Sensor) => {
-    setInstalledCommunitySensors(prev => 
-      prev.filter(s => s.key !== sensor.key)
-    );
-  }
-
-  const activateCommunitySensor = async (sensor: Sensor) => {
-    setInstalledCommunitySensors(prev => 
-      prev.map(s => s.key === sensor.key ? { ...s, isActive: true } : s)
-    );
-  }
-
-  const deactivateCommunitySensor = async (sensor: Sensor) => {
-    setInstalledCommunitySensors(prev => 
-      prev.map(s => s.key === sensor.key ? { ...s, isActive: false } : s)
-    );
-  }
+      setCoreSensors(sensorsWithState);
+    } catch (error) {
+      console.error('Failed to load sensors:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const activateCoreSensor = async (sensor: Sensor) => {
-    setCoreSensors(prev => 
-      prev.map(s => s.key === sensor.key ? { ...s, isActive: true } : s)
-    );
-  }
+    try {
+      // Check permissions first
+      const permissionCheck = AndroidTrackerLib.checkSensorPermission?.(sensor.key);
+
+      if (!permissionCheck?.granted) {
+        // Request permissions if needed
+        if (sensor.key === 'gps') {
+          AndroidTrackerLib.requestPermissionGroup?.('Access Location');
+        } else if (sensor.key === 'heart') {
+          AndroidTrackerLib.requestPermissionGroup?.('Body Sensors');
+        }
+        // Wait a bit for permission dialog
+        setTimeout(() => loadSensors(), 1000);
+        return;
+      }
+
+      // Update loading state
+      setCoreSensors(prev =>
+        prev.map(s => s.key === sensor.key ? { ...s, loading: true } : s)
+      );
+
+      // Start the sensor
+      const result = AndroidTrackerLib.startSensor?.(sensor.key);
+
+      if (result?.success) {
+        console.log(`✅ Sensor ${sensor.key} started successfully:`, result.message, result.data);
+        const updatedSensors = coreSensors.map(s => s.key === sensor.key ? {
+          ...s,
+          isActive: true,
+          loading: false,
+          status: 'RUNNING'
+        } : s);
+        setCoreSensors(updatedSensors);
+        await saveSensorStates(updatedSensors);
+      } else {
+        console.error(`❌ Failed to start sensor ${sensor.key}:`, result?.message);
+        setCoreSensors(prev =>
+          prev.map(s => s.key === sensor.key ? { ...s, loading: false } : s)
+        );
+      }
+    } catch (error) {
+      console.error('Error activating sensor:', error);
+      setCoreSensors(prev =>
+        prev.map(s => s.key === sensor.key ? { ...s, loading: false } : s)
+      );
+    }
+  };
 
   const deactivateCoreSensor = async (sensor: Sensor) => {
-    setCoreSensors(prev => 
-      prev.map(s => s.key === sensor.key ? { ...s, isActive: false } : s)
-    );
-  }
+    try {
+      // Update loading state
+      setCoreSensors(prev =>
+        prev.map(s => s.key === sensor.key ? { ...s, loading: true } : s)
+      );
+
+      // Stop the sensor
+      const result = AndroidTrackerLib.stopSensor?.(sensor.key);
+
+      if (result?.success) {
+        console.log(`✅ Sensor ${sensor.key} stopped successfully:`, result.message, result.data);
+        const updatedSensors = coreSensors.map(s => s.key === sensor.key ? {
+          ...s,
+          isActive: false,
+          loading: false,
+          status: 'STOPPED'
+        } : s);
+        setCoreSensors(updatedSensors);
+        await saveSensorStates(updatedSensors);
+      } else {
+        console.error(`❌ Failed to stop sensor ${sensor.key}:`, result?.message);
+        setCoreSensors(prev =>
+          prev.map(s => s.key === sensor.key ? { ...s, loading: false } : s)
+        );
+      }
+    } catch (error) {
+      console.error('Error deactivating sensor:', error);
+      setCoreSensors(prev =>
+        prev.map(s => s.key === sensor.key ? { ...s, loading: false } : s)
+      );
+    }
+  };
+
+  const verifySensorStatus = async (sensorKey: string) => {
+    try {
+      const status = AndroidTrackerLib.getSensorStatus?.(sensorKey);
+      console.log(`🔍 Sensor ${sensorKey} verification:`, status);
+      return status;
+    } catch (error) {
+      console.error(`❌ Error verifying sensor ${sensorKey}:`, error);
+      return null;
+    }
+  };
+
+  const verifyAllSensors = async () => {
+    try {
+      const allStatus = AndroidTrackerLib.getAllSensorStatus?.();
+      console.log('🔍 All sensors status:', allStatus);
+      return allStatus;
+    } catch (error) {
+      console.error('❌ Error verifying all sensors:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    loadSensors();
+  }, []);
+
+  // Auto-start sensors that were previously active
+  useEffect(() => {
+    const autoStartSensors = async () => {
+      if (coreSensors.length > 0 && !loading) {
+        const sensorsToStart = coreSensors.filter(sensor => sensor.isActive && sensor.available);
+        for (const sensor of sensorsToStart) {
+          try {
+            // Check permissions first
+            const permissionCheck = AndroidTrackerLib.checkSensorPermission?.(sensor.key);
+            if (permissionCheck?.granted) {
+              // Start the sensor in the background
+              AndroidTrackerLib.startSensor?.(sensor.key);
+            }
+          } catch (error) {
+            console.error(`Failed to auto-start sensor ${sensor.key}:`, error);
+          }
+        }
+      }
+    };
+
+    autoStartSensors();
+  }, [coreSensors, loading]);
 
   return {
     coreSensors,
-    communitySensors,
-    installedCommunitySensors,
-    loadCommunitySensors,
-    installCommunitySensor,
-    uninstallCommunitySensor,
-    activateCommunitySensor,
-    deactivateCommunitySensor,
+    loading,
     activateCoreSensor,
     deactivateCoreSensor,
+    refresh: loadSensors,
+    verifySensorStatus,
+    verifyAllSensors,
   };
-}; 
+};

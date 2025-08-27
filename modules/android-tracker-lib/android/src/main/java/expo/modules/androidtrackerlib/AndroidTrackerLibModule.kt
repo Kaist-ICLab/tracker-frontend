@@ -66,6 +66,30 @@ class AndroidTrackerLibModule : Module() {
     Function("requestPermission") { permissionKey: String ->
       getPermissionManager().request(arrayOf(permissionKey))
     }
-  }
 
+    // Sensor Management Functions
+    Function("getAvailableSensors") {
+      SensorUtils.getAvailableSensors(context)
+    }
+
+    Function("startSensor") { sensorKey: String ->
+      SensorUtils.startSensor(context, sensorKey)
+    }
+
+    Function("stopSensor") { sensorKey: String ->
+      SensorUtils.stopSensor(sensorKey)
+    }
+
+    Function("getSensorStatus") { sensorKey: String ->
+      SensorUtils.getSensorStatus(sensorKey)
+    }
+
+    Function("getAllSensorStatus") {
+      SensorUtils.getAllSensorStatus()
+    }
+
+    Function("checkSensorPermission") { sensorKey: String ->
+      SensorUtils.checkSensorPermission(context, sensorKey)
+    }
+  }
 }
