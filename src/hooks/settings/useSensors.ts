@@ -3,12 +3,19 @@ import { Sensor } from '@/types/settings';
 import AndroidTrackerLib from '../../../modules/android-tracker-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const CORE_SENSORS: Sensor[] = [
-  { key: 'accel', icon: 'speedometer', name: '가속도계', desc: '기본 움직임 감지' },
-  { key: 'gyro', icon: 'git-compare', name: '자이로스코프', desc: '회전 감지' },
-  { key: 'gps', icon: 'location', name: 'GPS', desc: '위치 추적' },
-  { key: 'heart', icon: 'heart', name: '심박수', desc: '심박수 모니터링' },
-  { key: 'temp', icon: 'thermometer', name: '온도계', desc: '체온 측정' }
+export const SENSOR_MAPPING: Sensor[] = [
+  { key: 'ambient_light', icon: 'sunny', name: '주변 조도', desc: '주변 조도 센서' },
+  { key: 'app_usage_log', icon: 'apps', name: '앱 사용 로그', desc: '앱 사용 통계' },
+  { key: 'battery', icon: 'battery-charging', name: '배터리', desc: '배터리 상태 모니터링' },
+  { key: 'bluetooth_scan', icon: 'bluetooth', name: '블루투스 스캔', desc: '블루투스 장치 스캔' },
+  { key: 'call_log', icon: 'call', name: '통화 로그', desc: '통화 기록' },
+  { key: 'data_traffic_stat', icon: 'cellular', name: '데이터 트래픽', desc: '네트워크 데이터 사용량' },
+  { key: 'location', icon: 'location', name: '위치', desc: 'GPS 위치 추적' },
+  { key: 'message_log', icon: 'chatbubble', name: '메시지 로그', desc: 'SMS/메시지 기록' },
+  { key: 'notification', icon: 'notifications', name: '알림', desc: '알림 모니터링' },
+  { key: 'screen', icon: 'phone-portrait', name: '화면', desc: '화면 상태 모니터링' },
+  { key: 'user_interaction', icon: 'hand-left', name: '사용자 상호작용', desc: '사용자 터치/제스처' },
+  { key: 'wifi_scan', icon: 'wifi', name: 'WiFi 스캔', desc: 'WiFi 네트워크 스캔' }
 ];
 
 export const useSensors = () => {
@@ -42,10 +49,10 @@ export const useSensors = () => {
     try {
       setLoading(true);
       const availableSensors = AndroidTrackerLib.getAvailableSensors?.() ?? [];
-      const savedStates = await loadSensorStates();
       const sensorStatuses = AndroidTrackerLib.getAllSensorStatus?.() ?? [];
+      const savedStates = await loadSensorStates();
 
-      const sensorsWithState = CORE_SENSORS.map(sensor => {
+      const sensorsWithState = SENSOR_MAPPING.map(sensor => {
         const availableSensor = availableSensors.find(s => s.key === sensor.key);
         const statusInfo = sensorStatuses.find(s => s.key === sensor.key);
         return {
@@ -71,11 +78,15 @@ export const useSensors = () => {
       const permissionCheck = AndroidTrackerLib.checkSensorPermission?.(sensor.key);
 
       if (!permissionCheck?.granted) {
-        // Request permissions if needed
-        if (sensor.key === 'gps') {
+        // Request permissions if needed based on sensor type
+        if (sensor.key === 'location' || sensor.key === 'wifi_scan' || sensor.key === 'bluetooth_scan') {
           AndroidTrackerLib.requestPermissionGroup?.('Access Location');
-        } else if (sensor.key === 'heart') {
-          AndroidTrackerLib.requestPermissionGroup?.('Body Sensors');
+        } else if (sensor.key === 'call_log' || sensor.key === 'message_log') {
+          AndroidTrackerLib.requestPermissionGroup?.('Phone');
+        } else if (sensor.key === 'app_usage_log') {
+          AndroidTrackerLib.requestPermissionGroup?.('Usage Access');
+        } else if (sensor.key === 'notification') {
+          AndroidTrackerLib.requestPermissionGroup?.('Notification Access');
         }
         // Wait a bit for permission dialog
         setTimeout(() => loadSensors(), 1000);
@@ -91,7 +102,6 @@ export const useSensors = () => {
       const result = AndroidTrackerLib.startSensor?.(sensor.key);
 
       if (result?.success) {
-        console.log(`✅ Sensor ${sensor.key} started successfully:`, result.message, result.data);
         const updatedSensors = coreSensors.map(s => s.key === sensor.key ? {
           ...s,
           isActive: true,
@@ -116,14 +126,10 @@ export const useSensors = () => {
 
   const deactivateCoreSensor = async (sensor: Sensor) => {
     try {
-      // Update loading state
       setCoreSensors(prev =>
         prev.map(s => s.key === sensor.key ? { ...s, loading: true } : s)
       );
-
-      // Stop the sensor
       const result = AndroidTrackerLib.stopSensor?.(sensor.key);
-
       if (result?.success) {
         console.log(`✅ Sensor ${sensor.key} stopped successfully:`, result.message, result.data);
         const updatedSensors = coreSensors.map(s => s.key === sensor.key ? {
@@ -145,28 +151,6 @@ export const useSensors = () => {
       setCoreSensors(prev =>
         prev.map(s => s.key === sensor.key ? { ...s, loading: false } : s)
       );
-    }
-  };
-
-  const verifySensorStatus = async (sensorKey: string) => {
-    try {
-      const status = AndroidTrackerLib.getSensorStatus?.(sensorKey);
-      console.log(`🔍 Sensor ${sensorKey} verification:`, status);
-      return status;
-    } catch (error) {
-      console.error(`❌ Error verifying sensor ${sensorKey}:`, error);
-      return null;
-    }
-  };
-
-  const verifyAllSensors = async () => {
-    try {
-      const allStatus = AndroidTrackerLib.getAllSensorStatus?.();
-      console.log('🔍 All sensors status:', allStatus);
-      return allStatus;
-    } catch (error) {
-      console.error('❌ Error verifying all sensors:', error);
-      return null;
     }
   };
 
@@ -203,7 +187,5 @@ export const useSensors = () => {
     activateCoreSensor,
     deactivateCoreSensor,
     refresh: loadSensors,
-    verifySensorStatus,
-    verifyAllSensors,
   };
 };
