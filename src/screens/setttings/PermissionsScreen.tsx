@@ -1,10 +1,10 @@
 import { usePermissions } from '@/hooks/settings/usePermissions';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { FlatList, RefreshControl, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 
 export const PermissionsScreen = () => {
-  const { permissions, loading, error, refresh, requestPermission } = usePermissions();
+  const { permissions, loading, refresh, requestPermission } = usePermissions();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -42,6 +42,7 @@ export const PermissionsScreen = () => {
         )}
         ItemSeparatorComponent={() => <View className="h-[1px] bg-gray-200" />}
         contentContainerStyle={{ backgroundColor: 'white', borderRadius: 16, margin: 16, overflow: 'hidden' }}
+        scrollEnabled={false}
       />
     </View>
   );
