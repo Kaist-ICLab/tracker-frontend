@@ -22,7 +22,7 @@ export const LoginScreen: React.FC<{
           style={{ width: 70, height: 70, marginRight: 20 }}
           resizeMode="contain"
         />
-        <Text className="text-2xl font-bold text-black">ICLab Tracker System</Text>
+        <Text className="text-2xl font-bold text-black">ICLab Tracker</Text>
       </View>
        <View className="mb-8">
          <GoogleButton
