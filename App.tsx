@@ -1,11 +1,13 @@
+import '@expo/metro-runtime';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-
 import { AppBar } from '@components/AppBar';
+import { LoginScreen } from '@/screens/auth/LoginScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { MessagingScreen } from '@/screens/messaging/MessagingScreen';
 import { SettingsHomeScreen } from '@/screens/setttings/SettingsHomeScreen';
@@ -27,15 +29,15 @@ const Stack = createStackNavigator();
 
 const DashboardStack = () => (
   <Stack.Navigator>
-    <Stack.Screen 
-      name="DashboardMain" 
+    <Stack.Screen
+      name="DashboardMain"
       component={DashboardScreen}
       options={{ headerShown: false }}
     />
     <Stack.Screen
       name="DataDetail"
       component={DataDetailScreen}
-      options={{ 
+      options={{
         headerShown: true,
         headerBackTitleVisible: false,
         headerStyle: {
@@ -87,40 +89,47 @@ const SettingsStack = () => (
   </Stack.Navigator>
 );
 
+const MainApp = () => (
+  <SafeAreaView className="flex-1">
+    <StatusBar style="auto" />
+    <AppBar title="Tracker System Mobile" />
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = 'home';
+
+          if (route.name === 'Dashboard') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Capture') {
+            iconName = focused ? 'camera' : 'camera-outline';
+          } else if (route.name === 'Messaging') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#3b82f6',
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+      })}
+    >
+      <Tab.Screen name="Dashboard" component={DashboardStack} />
+      <Tab.Screen name="Capture" component={CaptureStack} />
+      <Tab.Screen name="Messaging" component={MessagingScreen} />
+      <Tab.Screen name="Settings" component={SettingsStack} />
+    </Tab.Navigator>
+  </SafeAreaView>
+);
+
 export default function App() {
   return (
     <NavigationContainer>
-      <SafeAreaView className="flex-1">
-        <StatusBar style="auto" />
-        <AppBar title="Tracker System Mobile" />
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName: keyof typeof Ionicons.glyphMap = 'home';
-              
-              if (route.name === 'Dashboard') {
-                iconName = focused ? 'home' : 'home-outline';
-              } else if (route.name === 'Capture') {
-                iconName = focused ? 'camera' : 'camera-outline';
-              } else if (route.name === 'Messaging') {
-                iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-              } else if (route.name === 'Settings') {
-                iconName = focused ? 'settings' : 'settings-outline';
-              }
-              
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: '#3b82f6',
-            tabBarInactiveTintColor: 'gray',
-            headerShown: false,
-          })}
-        >
-          <Tab.Screen name="Dashboard" component={DashboardStack} />
-          <Tab.Screen name="Capture" component={CaptureStack} />
-          <Tab.Screen name="Messaging" component={MessagingScreen} />
-          <Tab.Screen name="Settings" component={SettingsStack} />
-        </Tab.Navigator>
-      </SafeAreaView>
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="MainApp" component={MainApp} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
