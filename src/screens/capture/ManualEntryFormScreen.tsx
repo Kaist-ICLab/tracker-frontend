@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TextInput, Alert, TouchableOpacity } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface ManualEntryFormScreenProps {
@@ -72,7 +72,7 @@ export const ManualEntryFormScreen: React.FC<ManualEntryFormScreenProps> = ({ ro
             <DateTimePicker
               value={draft[key] ? new Date(draft[key]) : new Date()}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display="default"
               onChange={(_, date) => {
                 setShowDatePicker({ key: '', visible: false });
                 if (date) handleChange(key, date.toISOString());

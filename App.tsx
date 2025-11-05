@@ -92,7 +92,7 @@ export default function App() {
     <NavigationContainer>
       <SafeAreaView className="flex-1">
         <StatusBar style="auto" />
-        <AppBar title="Tracker Mobile" />
+        <AppBar title="Tracker System Mobile" />
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color, size }) => {

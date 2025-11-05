@@ -1,0 +1,6 @@
+{
+  "platforms": ["android", "web"],
+  "android": {
+    "modules": ["kaist.iclab.trackerSystem.TrackerSystemModule"]
+  }
+}
