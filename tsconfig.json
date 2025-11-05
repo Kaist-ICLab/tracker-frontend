@@ -32,6 +32,9 @@
       ],
       "@hooks/*": [
         "src/hooks/*"
+      ],
+      "@config": [
+        "AppConfig"
       ]
     },
     "types": [
@@ -41,6 +44,7 @@
   "include": [
     "src/**/*",
     "App.tsx",
+    "AppConfig.ts",
     "nativewind-env.d.ts"
   ]
 }
