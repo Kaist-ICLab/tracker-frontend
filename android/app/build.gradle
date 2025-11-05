@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk 35
 
-    namespace 'com.anonymous.trackerapp'
+    namespace 'kaist.iclab.trackerSystem'
     defaultConfig {
-        applicationId 'com.anonymous.trackerapp'
+        applicationId 'kaist.iclab.trackerSystem'
         minSdkVersion 30
         targetSdkVersion 35
         versionCode 1
