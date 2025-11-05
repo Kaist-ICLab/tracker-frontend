@@ -40,7 +40,7 @@ export const DashboardScreen: React.FC<{
         renderItem={({ item }) => (
           <DataCard {...item} onPress={() => handleCardPress(item)} />
         )}
-        className="py-4"
+        className="py-2"
       />
     </View>
   );

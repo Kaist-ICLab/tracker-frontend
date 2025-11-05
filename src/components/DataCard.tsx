@@ -25,18 +25,18 @@ export const DataCard: React.FC<{
   onPress: () => void;
 }> = ({ id, title, recordCount, updatedAt, iconName, onPress }) => (
   <TouchableOpacity 
-    className="bg-white rounded-xl p-4 mx-4 my-2 shadow-sm"
+    className="bg-white rounded-lg p-3 mx-4 my-1.5 shadow-sm"
     onPress={onPress}
   >
     {iconName && (
       <Ionicons 
         name={iconName as any} 
-        size={24} 
-        className="mb-2 text-blue-500"
+        size={20} 
+        className="mb-1 text-blue-500"
       />
     )}
-    <Text className="text-base font-semibold mb-1">{title}</Text>
-    <Text className="text-2xl font-bold mb-1">{recordCount} records</Text>
+    <Text className="text-sm font-semibold mb-0.5">{title}</Text>
+    <Text className="text-lg font-bold mb-0.5">{recordCount} records</Text>
     <Text className="text-xs text-gray-400">{getTimeAgo(updatedAt)}</Text>
   </TouchableOpacity>
 ); 

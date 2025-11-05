@@ -4,31 +4,45 @@ import { DataCard, DashboardData } from '../types/dashboard';
 const SAMPLE_DATA: DataCard[] = [
   {
     id: '1',
+    title: 'Accelerometer',
+    recordCount: 342,
+    updatedAt: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
+    iconName: 'speedometer',
+  },
+  {
+    id: '2',
+    title: 'PPG',
+    recordCount: 189,
+    updatedAt: new Date(Date.now() - 3 * 60 * 1000), // 3 minutes ago
+    iconName: 'pulse',
+  },
+  {
+    id: '3',
     title: 'Heart Rate',
     recordCount: 128,
     updatedAt: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
     iconName: 'heart',
   },
   {
-    id: '2',
-    title: 'Steps',
-    recordCount: 256,
-    updatedAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-    iconName: 'footsteps',
-  },
-  {
-    id: '3',
-    title: 'Sleep',
-    recordCount: 32,
-    updatedAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-    iconName: 'bed',
-  },
-  {
     id: '4',
-    title: 'Blood Pressure',
-    recordCount: 64,
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    iconName: 'fitness',
+    title: 'Location',
+    recordCount: 276,
+    updatedAt: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago
+    iconName: 'location',
+  },
+  {
+    id: '5',
+    title: 'Skin Temperature',
+    recordCount: 156,
+    updatedAt: new Date(Date.now() - 8 * 60 * 1000), // 8 minutes ago
+    iconName: 'thermometer',
+  },
+  {
+    id: '6',
+    title: 'Skin Conductivity',
+    recordCount: 203,
+    updatedAt: new Date(Date.now() - 4 * 60 * 1000), // 4 minutes ago
+    iconName: 'flash',
   },
 ];
 
